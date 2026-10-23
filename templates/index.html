@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>AgriPrice Alert</title></head>
+<body>
+    <h1>Current Crop Prices</h1>
+    <ul>
+    {% for crop in crops %}
+        <li>{{ crop['crop'] }}: R{{ crop['price'] }}</li>
+    {% endfor %}
+    </ul>
+    <a href="/admin">Admin Panel</a>
+</body>
+</html>
