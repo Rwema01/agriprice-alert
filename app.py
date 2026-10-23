@@ -1,0 +1,41 @@
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
+
+app = Flask(__name__)
+
+def get_db():
+    conn = sqlite3.connect('prices.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/')
+def index():
+    db = get_db()
+    crops = db.execute('SELECT * FROM prices').fetchall()
+    db.close()
+    return render_template('index.html', crops=crops)
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if request.method == 'POST':
+        crop = request.form['crop']
+        price = request.form['price']
+        db = get_db()
+        db.execute('UPDATE prices SET price = ? WHERE crop = ?', (price, crop))
+        db.commit()
+        db.close()
+        return redirect(url_for('index'))
+    db = get_db()
+    crops = db.execute('SELECT * FROM prices').fetchall()
+    db.close()
+    return render_template('admin.html', crops=crops)
+
+if __name__ == '__main__':
+    import os
+    if not os.path.exists('prices.db'):
+        db = get_db()
+        db.execute('CREATE TABLE prices (crop TEXT PRIMARY KEY, price REAL)')
+        db.execute("INSERT INTO prices VALUES ('Maize', 250.00), ('Beans', 600.00), ('Rice', 400.00)")
+        db.commit()
+        db.close()
+    app.run(debug=True)
