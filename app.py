@@ -1,12 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for
+import os
 import sqlite3
 
+from flask import Flask, redirect, render_template, request, url_for
+
 app = Flask(__name__)
+
 
 def get_db():
     conn = sqlite3.connect('prices.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def init_db():
+    """Create the database and table if they don't exist yet."""
+    if not os.path.exists('prices.db'):
+        db = get_db()
+        db.execute('CREATE TABLE prices (crop TEXT PRIMARY KEY, price REAL)')
+        db.execute("INSERT INTO prices VALUES ('Maize', 250.00), ('Beans', 600.00), ('Rice', 400.00)")
+        db.commit()
+        db.close()
+
+
+# Run the initialization when the app starts
+init_db()
+
 
 @app.route('/')
 def index():
@@ -14,6 +32,7 @@ def index():
     crops = db.execute('SELECT * FROM prices').fetchall()
     db.close()
     return render_template('index.html', crops=crops)
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -30,12 +49,6 @@ def admin():
     db.close()
     return render_template('admin.html', crops=crops)
 
+
 if __name__ == '__main__':
-    import os
-    if not os.path.exists('prices.db'):
-        db = get_db()
-        db.execute('CREATE TABLE prices (crop TEXT PRIMARY KEY, price REAL)')
-        db.execute("INSERT INTO prices VALUES ('Maize', 250.00), ('Beans', 600.00), ('Rice', 400.00)")
-        db.commit()
-        db.close()
     app.run(debug=True)
