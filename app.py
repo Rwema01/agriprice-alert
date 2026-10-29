@@ -12,6 +12,20 @@ def get_db():
     return conn
 
 
+def init_db():
+    """Create the database and table if they don't exist yet."""
+    if not os.path.exists('prices.db'):
+        db = get_db()
+        db.execute('CREATE TABLE prices (crop TEXT PRIMARY KEY, price REAL)')
+        db.execute("INSERT INTO prices VALUES ('Maize', 250.00), ('Beans', 600.00), ('Rice', 400.00)")
+        db.commit()
+        db.close()
+
+
+# Run the initialization when the app starts
+init_db()
+
+
 @app.route('/')
 def index():
     db = get_db()
@@ -37,10 +51,4 @@ def admin():
 
 
 if __name__ == '__main__':
-    if not os.path.exists('prices.db'):
-        db = get_db()
-        db.execute('CREATE TABLE prices (crop TEXT PRIMARY KEY, price REAL)')
-        db.execute("INSERT INTO prices VALUES ('Maize', 250.00), ('Beans', 600.00), ('Rice', 400.00)")
-        db.commit()
-        db.close()
     app.run(debug=True)
