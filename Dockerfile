@@ -1,24 +1,24 @@
 # Stage 1: Builder
-FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies if needed (optional, but good for packages that compile C extensions)
-RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+# Install build dependencies needed for alpine
+RUN apk add --no-cache gcc musl-dev linux-headers
 
 # Install dependencies into a local folder
 COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: Runtime
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Create a non-root user (Keeping your F2 security best practice!)
-RUN useradd -m myuser
+# Create a non-root user
+RUN adduser -D myuser
 
 WORKDIR /app
 
