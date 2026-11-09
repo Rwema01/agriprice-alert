@@ -21,16 +21,31 @@ Smallholder farmers and agricultural traders across East Africa.
 
 ## Core Features
 
-- Feature 1: View current prices for staple crops (Maize, Beans, Rice).
-- Feature 2: Admin panel to update crop prices.
-- Feature 3: Simple, mobile-friendly interface (planned for future iterations).
+- **Feature 1:** View current prices for staple crops (Maize, Beans, Rice).
+- **Feature 2:** Admin panel to update crop prices.
+- **Feature 3:** Health check endpoint (`/health`) for container monitoring.
+- **Feature 4:** Fully automated DevSecOps CI/CD pipeline with security scans.
 
 ## Technology Stack
 
-- Backend: Python (Flask)
-- Frontend: HTML/CSS
-- Database: SQLite
-- DevOps: Docker, Docker Compose, GitHub Actions
+- **Backend:** Python (Flask), Gunicorn
+- **Frontend:** HTML/CSS
+- **Database:** SQLite
+- **Containerization:** Docker (Multi-stage build), Docker Compose
+- **Infrastructure as Code:** Terraform (AWS S3 & KMS)
+- **Configuration Management:** Ansible
+- **CI/CD & Security:** GitHub Actions, Ruff, Pytest, Checkov, pip-audit, Trivy
+
+## DevSecOps Pipeline (Formative 3)
+
+This project includes a fully automated CI/CD pipeline that runs on every push and pull request to ensure code quality, security, and reliability.
+
+1.  **Lint & Test:** Uses `Ruff` for Python linting and `Pytest` for unit tests.
+2.  **Build:** Creates a secure, multi-stage Docker image using a non-root user.
+3.  **Security Scans:**
+    -   **Checkov:** Scans Terraform files for AWS misconfigurations.
+    -   **pip-audit:** Scans Python dependencies for known vulnerabilities (CVEs).
+    -   **Trivy:** Scans the final Docker container image for OS and library vulnerabilities.
 
 ## Getting Started
 
@@ -39,7 +54,9 @@ Smallholder farmers and agricultural traders across East Africa.
 1. Ensure you have Docker Desktop installed and running.
 2. Clone the repository and navigate into the project directory.
 3. Run the following command:
+   ```bash
    docker-compose up --build
+   ```
 4. Open your browser and go to http://localhost:5000
 
 ### Option 2: Running Locally with Python
@@ -52,22 +69,36 @@ Smallholder farmers and agricultural traders across East Africa.
 #### Installation
 
 1. Clone the repository:
+   ```bash
    git clone https://github.com/Rwema01/agriprice-alert.git
+   ```
 2. Navigate into the project directory:
+   ```bash
    cd agriprice-alert
+   ```
 3. Create a virtual environment:
+   ```bash
    python -m venv venv
+   ```
 4. Activate the virtual environment:
    - On Windows:
+     ```bash
      venv\Scripts\activate
+     ```
    - On Mac/Linux:
+     ```bash
      source venv/bin/activate
+     ```
 5. Install the required dependencies:
+   ```bash
    pip install -r requirements.txt
+   ```
 
 #### Run the Application
 
+```bash
 python app.py
+```
 
 ## Usage
 
@@ -77,16 +108,22 @@ python app.py
 
 ## Project Structure
 
+```text
 agriprice-alert/
 ├── .github/
 │   ├── CODEOWNERS
 │   └── workflows/
 │       └── ci.yml
+├── ansible/
+│   └── playbook.yml
+├── terraform/
+│   └── main.tf
 ├── templates/
 │   ├── index.html
 │   └── admin.html
 ├── .dockerignore
 ├── .gitignore
+├── .trivyignore
 ├── Dockerfile
 ├── docker-compose.yml
 ├── LICENSE
@@ -94,6 +131,7 @@ agriprice-alert/
 ├── app.py
 ├── requirements.txt
 └── test_app.py
+```
 
 ## Links
 
