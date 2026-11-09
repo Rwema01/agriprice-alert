@@ -8,7 +8,8 @@ RUN apk add --no-cache gcc musl-dev linux-headers
 
 # Install dependencies into a local folder
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt && \
+    pip install --no-cache-dir --user --upgrade jaraco.context wheel
 
 # Stage 2: Runtime
 FROM python:3.11-alpine
