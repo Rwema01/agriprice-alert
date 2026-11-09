@@ -91,5 +91,5 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          # Explicitly tell Trivy to skip the false-positive python packages
-          skip-files: 'usr/local/lib/python3.11/site-packages/jaraco/context*,usr/local/lib/python3.11/site-packages/wheel*'
+          # Correctly tell Trivy to use the ignore file
+          trivyignores: '.trivyignore'
