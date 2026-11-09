@@ -30,73 +30,74 @@ Smallholder farmers and agricultural traders across East Africa.
 - Backend: Python (Flask)
 - Frontend: HTML/CSS
 - Database: SQLite
+- DevOps: Docker, Docker Compose, GitHub Actions
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Running with Docker Compose (Recommended)
+
+1. Ensure you have Docker Desktop installed and running.
+2. Clone the repository and navigate into the project directory.
+3. Run the following command:
+   docker-compose up --build
+4. Open your browser and go to http://localhost:5000
+
+### Option 2: Running Locally with Python
+
+#### Prerequisites
 
 - Python 3.9+
 - Git
 
-### Installation
+#### Installation
 
 1. Clone the repository:
-   ```bash
    git clone https://github.com/Rwema01/agriprice-alert.git
-   ```
 2. Navigate into the project directory:
-   ```bash
    cd agriprice-alert
-   ```
 3. Create a virtual environment:
-   ```bash
    python -m venv venv
-   ```
 4. Activate the virtual environment:
    - On Windows:
-     ```bash
      venv\Scripts\activate
-     ```
    - On Mac/Linux:
-     ```bash
      source venv/bin/activate
-     ```
 5. Install the required dependencies:
-   ```bash
    pip install -r requirements.txt
-   ```
 
-### Run the Application
+#### Run the Application
 
-```bash
 python app.py
-```
 
 ## Usage
 
-1. Open your browser and go to `http://127.0.0.1:5000`
+1. Open your browser and go to http://127.0.0.1:5000 (or http://localhost:5000 if using Docker).
 2. You will see the list of current crop prices.
-3. Click "Admin Panel" to update a price and see it reflect on the main page.
+3. Click Admin Panel to update a price and see it reflect on the main page.
 
 ## Project Structure
 
-```text
 agriprice-alert/
 ├── .github/
-│   └── CODEOWNERS
+│   ├── CODEOWNERS
+│   └── workflows/
+│       └── ci.yml
 ├── templates/
 │   ├── index.html
 │   └── admin.html
+├── .dockerignore
 ├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
 ├── LICENSE
 ├── README.md
 ├── app.py
-└── requirements.txt
-```
+├── requirements.txt
+└── test_app.py
 
 ## Links
 
-- Project Board: https://github.com/users/Rwema01/projects/2
+- Project Board: https://github.com/Rwema01/projects/2
 
 ## License
 
