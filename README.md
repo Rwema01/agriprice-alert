@@ -32,8 +32,8 @@ Smallholder farmers and agricultural traders across East Africa.
 - **Frontend:** HTML/CSS
 - **Database:** SQLite
 - **Containerization:** Docker (Multi-stage build), Docker Compose
-- **Infrastructure as Code:** Terraform (AWS S3 & KMS)
-- **Configuration Management:** Ansible
+- **Infrastructure as Code:** Terraform (Modular VPC, EC2, NSG)
+- **Configuration Management:** Ansible (Roles, SSH Hardening, UFW)
 - **CI/CD & Security:** GitHub Actions, Ruff, Pytest, Checkov, pip-audit, Trivy
 
 ## DevSecOps Pipeline (Formative 3)
@@ -115,9 +115,23 @@ agriprice-alert/
 │   └── workflows/
 │       └── ci.yml
 ├── ansible/
-│   └── playbook.yml
+│   ├── inventory.ini
+│   ├── playbook.yml
+│   ├── README.md
+│   └── roles/
+│       └── app_deploy/
+│           ├── handlers/
+│           │   └── main.yml
+│           └── tasks/
+│               └── main.yml
 ├── terraform/
-│   └── main.tf
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── README.md
+│   └── modules/
+│       └── vpc_compute/
+│           └── main.tf
 ├── templates/
 │   ├── index.html
 │   └── admin.html
@@ -128,6 +142,7 @@ agriprice-alert/
 ├── docker-compose.yml
 ├── LICENSE
 ├── README.md
+├── SECURITY.md
 ├── app.py
 ├── requirements.txt
 └── test_app.py
@@ -140,3 +155,7 @@ agriprice-alert/
 ## License
 
 MIT
+
+## AI Use Declaration
+
+We used AI tools for documentation formatting, Markdown writing, and debugging error logs (as permitted by the course policy). All core Terraform, Ansible, and CI YAML configurations were written manually. For full details, please read our [AI Use Annex](./AI_USE.md).
