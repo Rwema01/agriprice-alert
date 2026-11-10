@@ -155,3 +155,7 @@ agriprice-alert/
 ## License
 
 MIT
+
+## AI Use Declaration
+
+We used AI tools for documentation formatting, Markdown writing, and debugging error logs (as permitted by the course policy). All core Terraform, Ansible, and CI YAML configurations were written manually. For full details, please read our [AI Use Annex](./AI_USE.md).
