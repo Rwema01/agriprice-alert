@@ -2,28 +2,5 @@
 - name: Deploy AgriPrice Alert App
   hosts: webservers
   become: yes
-  tasks:
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
-        update_cache: yes
-
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Pull the application image
-      community.docker.docker_image:
-        name: agriprice-alert:latest
-        source: pull
-
-    - name: Run the AgriPrice container
-      community.docker.docker_container:
-        name: agriprice-app
-        image: agriprice-alert:latest
-        state: started
-        ports:
-          - "5000:5000"
+  roles:
+    - app_deploy

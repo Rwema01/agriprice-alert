@@ -1,0 +1,50 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  changed_when: false
+
+- name: Install dependencies (Docker and UFW)
+  apt:
+    name: 
+      - docker.io
+      - ufw
+    state: present
+
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Configure UFW firewall (Allow 5000)
+  ufw:
+    rule: allow
+    port: '5000'
+    proto: tcp
+
+- name: Configure UFW firewall (Allow SSH 22)
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Harden SSH (Disable root login)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+  notify: restart ssh
+
+- name: Pull the application image
+  community.docker.docker_image:
+    name: agriprice-alert:latest
+    source: pull
+
+- name: Run the AgriPrice container
+  community.docker.docker_container:
+    name: agriprice-app
+    image: agriprice-alert:latest
+    state: started
+    ports:
+      - "5000:5000"
