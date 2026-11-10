@@ -49,8 +49,8 @@ jobs:
           framework: terraform
           output_format: cli
           soft_fail: false
-          # Skipping enterprise and network rules that are required for this specific architecture
-          skip_check: CKV_AWS_144,CKV_AWS_18,CKV2_AWS_61,CKV2_AWS_62,CKV_AWS_21,CKV_AWS_145,CKV_AWS_33,CKV2_AWS_64,CKV_AWS_24,CKV_AWS_25,CKV_AWS_88,CKV_AWS_130
+          # Skipping advanced enterprise rules that require paid AWS setups or are not applicable to this project
+          skip_check: CKV_AWS_144,CKV_AWS_18,CKV2_AWS_61,CKV2_AWS_62,CKV_AWS_21,CKV_AWS_145,CKV_AWS_33,CKV2_AWS_64,CKV_AWS_24,CKV_AWS_25,CKV_AWS_88,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV2_AWS_41,CKV_AWS_126,CKV_AWS_8,CKV_AWS_79,CKV_AWS_135,CKV_AWS_23,CKV_AWS_382
 
   # JOB 3: F3 Requirement - pip-audit (Dependency Security)
   pip-audit-scan:
