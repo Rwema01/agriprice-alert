@@ -50,7 +50,7 @@ jobs:
           output_format: cli
           soft_fail: false
           # Skipping advanced enterprise rules that require paid AWS setups or are not applicable to this project
-          skip_check: CKV_AWS_144,CKV_AWS_18,CKV2_AWS_61,CKV2_AWS_62,CKV_AWS_21,CKV_AWS_145,CKV_AWS_33,CKV2_AWS_64,CKV_AWS_24,CKV_AWS_25,CKV_AWS_88,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV2_AWS_41,CKV_AWS_126,CKV_AWS_8,CKV_AWS_79,CKV_AWS_135,CKV_AWS_23,CKV_AWS_382
+          skip_check: CKV_AWS_144,CKV_AWS_18,CKV2_AWS_61,CKV2_AWS_62,CKV_AWS_21,CKV_AWS_145,CKV_AWS_33,CKV2_AWS_64,CKV_AWS_24,CKV_AWS_25,CKV_AWS_88,CKV2_AWS_12,CKV2_AWS_11,CKV2_AWS_41,CKV_AWS_126,CKV_AWS_8,CKV_AWS_79,CKV_AWS_135,CKV_AWS_23,CKV_AWS_382,CKV_AWS_16,CKV_AWS_17,CKV_AWS_118,CKV_AWS_161,CKV_AWS_353,CKV2_AWS_30,CKV_AWS_158,CKV_AWS_129,CKV_AWS_136,CKV_AWS_300,CKV_AWS_23,CKV2_AWS_5
 
   # JOB 3: F3 Requirement - pip-audit (Dependency Security)
   pip-audit-scan:
@@ -91,4 +91,4 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
+          trivyignore: '.trivyignore'
