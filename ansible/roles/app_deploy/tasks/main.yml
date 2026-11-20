@@ -4,11 +4,13 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker and UFW)
+- name: Install dependencies (Docker, Docker Compose, UFW, AWS CLI)
   apt:
     name: 
       - docker.io
+      - docker-compose
       - ufw
+      - awscli
     state: present
 
 - name: Start Docker service
@@ -36,15 +38,31 @@
     line: 'PermitRootLogin no'
   notify: restart ssh
 
-- name: Pull the application image
-  community.docker.docker_image:
-    name: agriprice-alert:latest
-    source: pull
+- name: Log in to AWS ECR
+  shell: |
+    aws ecr get-login-password --region <YOUR_AWS_REGION> | docker login --username AWS --password-stdin <YOUR_ECR_URL>
+  register: ecr_login
 
-- name: Run the AgriPrice container
-  community.docker.docker_container:
-    name: agriprice-app
-    image: agriprice-alert:latest
-    state: started
-    ports:
-      - "5000:5000"
+- name: Create deployment directory
+  file:
+    path: /home/ubuntu/deployment
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy docker-compose.yml to the server
+  copy:
+    src: ../../deployment/docker-compose.yml
+    dest: /home/ubuntu/deployment/docker-compose.yml
+
+- name: Deploy the application using Docker Compose
+  shell: |
+    cd /home/ubuntu/deployment
+    export ECR_REGISTRY=<YOUR_ECR_URL>
+    export ECR_REPO=agriprice-app
+    export DB_HOST=<YOUR_RDS_ENDPOINT>
+    export DB_NAME=agriprice
+    export DB_USER=postgres
+    export DB_PASSWORD=ChooseAPassword123!
+    docker-compose up -d

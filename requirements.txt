@@ -4,3 +4,4 @@ ruff==0.4.4
 gunicorn==22.0.0
 jaraco.context==6.1.0
 wheel==0.46.2
+psycopg2-binary==2.9.9

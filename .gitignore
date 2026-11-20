@@ -45,3 +45,14 @@ config.local.yml
 # Logs
 *.log
 logs/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+
+# AWS & Keys
+*.pem
+awscliv2.zip
