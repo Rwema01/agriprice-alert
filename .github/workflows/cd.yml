@@ -1,0 +1,38 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # --- YOU WRITE THE REST BELOW ---
+
+      # 1. Build the Docker image and push to ECR
+      # (Hint: Use `docker build` and `docker push` commands)
+
+      # 2. Setup the SSH key for Ansible
+      # (Hint: Use `webfactory/ssh-agent@v0.9.0`)
+
+      # 3. Install Ansible and the Docker collection
+      # (Hint: Use `pip install ansible` and `ansible-galaxy collection install community.docker`)
+
+      # 4. Run the Ansible playbook
+      # (Hint: `ansible-playbook -i ansible/inventory.ini ansible/playbook.yml`)
