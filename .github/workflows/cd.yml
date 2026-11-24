@@ -12,7 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Run CI Checks (Required by the rubric)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -26,45 +25,37 @@ jobs:
           ruff check .
           pytest
 
-      # 2. Configure AWS
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3. Login to ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # 4. Build and Push to ECR
-      - name: Build, tag, and push image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: agriprice-app
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Login to Azure Container Registry
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          az acr login --name agripriceacr
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login agripriceacr.azurecr.io -u "${{ secrets.ACR_USERNAME }}" --password-stdin
 
-      # 5. Setup SSH Key (So Ansible can connect to the Bastion/VM)
+      - name: Build, tag, and push image to Azure ACR
+        run: |
+          docker build -t agripriceacr.azurecr.io/agriprice-app:${{ github.sha }} -t agripriceacr.azurecr.io/agriprice-app:latest .
+          docker push agripriceacr.azurecr.io/agriprice-app:${{ github.sha }}
+          docker push agripriceacr.azurecr.io/agriprice-app:latest
+
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/agriprice-key.pem
-          chmod 400 ~/.ssh/agriprice-key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/azure-key
+          chmod 400 ~/.ssh/azure-key
 
-      # 6. Install Ansible
       - name: Install Ansible
         run: |
           python3 -m pip install --upgrade pip
           pip install ansible
           ansible-galaxy collection install community.docker
 
-      # 7. Run Ansible against the VM
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+        env:
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}

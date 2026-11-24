@@ -56,3 +56,6 @@ logs/
 # AWS & Keys
 *.pem
 awscliv2.zip
+
+# Azure
+*.pub

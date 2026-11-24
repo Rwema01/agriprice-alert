@@ -4,13 +4,12 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker, Docker Compose, UFW, AWS CLI)
+- name: Install dependencies (Docker, Docker Compose, UFW)
   apt:
     name: 
       - docker.io
       - docker-compose
       - ufw
-      - awscli
     state: present
 
 - name: Start Docker service
@@ -38,10 +37,10 @@
     line: 'PermitRootLogin no'
   notify: restart ssh
 
-- name: Log in to AWS ECR
+- name: Log in to Azure ACR
   shell: |
-    aws ecr get-login-password --region <YOUR_AWS_REGION> | docker login --username AWS --password-stdin <YOUR_ECR_URL>
-  register: ecr_login
+    echo "{{ lookup('env', 'ACR_PASSWORD') }}" | docker login agripriceacr.azurecr.io -u {{ lookup('env', 'ACR_USERNAME') }} --password-stdin
+  register: acr_login
 
 - name: Create deployment directory
   file:
@@ -57,12 +56,13 @@
     dest: /home/ubuntu/deployment/docker-compose.yml
 
 - name: Deploy the application using Docker Compose
-  shell: |
-    cd /home/ubuntu/deployment
-    export ECR_REGISTRY=<YOUR_ECR_URL>
-    export ECR_REPO=agriprice-app
-    export DB_HOST=<YOUR_RDS_ENDPOINT>
-    export DB_NAME=agriprice
-    export DB_USER=postgres
-    export DB_PASSWORD=ChooseAPassword123!
-    docker-compose up -d
+  shell: docker-compose up -d
+  args:
+    chdir: /home/ubuntu/deployment
+  environment:
+    ECR_REGISTRY: "agripriceacr.azurecr.io"
+    ECR_REPO: "agriprice-app"
+    DB_HOST: "agriprice-db-server.postgres.database.azure.com"
+    DB_NAME: "agriprice"
+    DB_USER: "postgres"
+    DB_PASSWORD: "ChooseAPassword123!"

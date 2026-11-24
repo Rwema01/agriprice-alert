@@ -5,19 +5,19 @@ All notable changes to the AgriPrice Alert project will be documented in this fi
 ## [Summative] - 2026-11-24
 ### Added
 - Complete end-to-end Git-to-Production pipeline.
-- Terraform provisioning for Bastion Host, Private Subnet, RDS Database, and ECR Registry.
-- Ansible playbook configured to SSH via Bastion and deploy from ECR.
+- Terraform provisioning for Azure Bastion Host, Private Subnet, Azure PostgreSQL Database, and Azure Container Registry (ACR).
+- Ansible playbook configured to SSH via Bastion and deploy from ACR.
 - Continuous Deployment (`cd.yml`) pipeline automating image push and Ansible execution.
 
 ### Changed
-- Migrated application database from local SQLite to AWS RDS (PostgreSQL).
+- Migrated application database from local SQLite to Azure PostgreSQL.
 - Updated Dockerfile to include PostgreSQL dependencies.
 
 ## [Formative 3] - 2026-11-13
 ### Added
-- Terraform Infrastructure as Code (VPC, EC2, Security Groups).
+- Terraform Infrastructure as Code (VNet, VMs, NSGs).
 - Ansible configuration management.
-- DevSecOps security scans (Checkov, pip-audit, Trivy).
+- DevSecOps security scans (Checkov, Trivy, pip-audit).
 
 ## [Formative 2] - 2026-10-31
 ### Added
