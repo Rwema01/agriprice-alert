@@ -93,7 +93,7 @@ resource "azurerm_network_security_group" "app_nsg" {
   }
 }
 
-# NEW: Associate NSGs with Subnets (Fixes CKV2_AZURE_31)
+# Associate NSGs with Subnets (Fixes CKV2_AZURE_31)
 resource "azurerm_subnet_network_security_group_association" "public" {
   subnet_id                 = azurerm_subnet.public_subnet.id
   network_security_group_id = azurerm_network_security_group.bastion_nsg.id
@@ -114,6 +114,7 @@ resource "azurerm_public_ip" "bastion_ip" {
 }
 
 # 7. Network Interfaces
+# checkov:skip=CKV_AZURE_119: Bastion host requires a public IP for SSH access as per assignment requirements
 resource "azurerm_network_interface" "bastion_nic" {
   name                = "bastion-nic"
   location            = azurerm_resource_group.rg.location
