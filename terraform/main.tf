@@ -26,7 +26,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-# 3. Public Subnet (For the Bastion)
+# 3. Public Subnet
 resource "azurerm_subnet" "public_subnet" {
   name                 = "public-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -35,7 +35,7 @@ resource "azurerm_subnet" "public_subnet" {
   depends_on           = [azurerm_virtual_network.vnet]
 }
 
-# 4. Private Subnet (For the App VM and Database)
+# 4. Private Subnet
 resource "azurerm_subnet" "private_subnet" {
   name                 = "private-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -93,6 +93,17 @@ resource "azurerm_network_security_group" "app_nsg" {
   }
 }
 
+# NEW: Associate NSGs with Subnets (Fixes CKV2_AZURE_31)
+resource "azurerm_subnet_network_security_group_association" "public" {
+  subnet_id                 = azurerm_subnet.public_subnet.id
+  network_security_group_id = azurerm_network_security_group.bastion_nsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "private" {
+  subnet_id                 = azurerm_subnet.private_subnet.id
+  network_security_group_id = azurerm_network_security_group.app_nsg.id
+}
+
 # 6. Public IPs
 resource "azurerm_public_ip" "bastion_ip" {
   name                = "bastion-ip"
@@ -137,7 +148,6 @@ resource "azurerm_linux_virtual_machine" "bastion_vm" {
   admin_username      = "ubuntu"
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
 
-  # Fixes Checkov CKV_AZURE_50 (Extension operations)
   allow_extension_operations = false
 
   admin_ssh_key {
@@ -166,7 +176,6 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   admin_username      = "ubuntu"
   network_interface_ids = [azurerm_network_interface.app_nic.id]
 
-  # Fixes Checkov CKV_AZURE_50 (Extension operations)
   allow_extension_operations = false
 
   admin_ssh_key {
@@ -187,27 +196,30 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   }
 }
 
-# 9. Container Registry (Fixed for Checkov Security Scans)
+# 9. Container Registry
 resource "azurerm_container_registry" "acr" {
   name                = "agripriceacr"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   
-  # Premium SKU is required for zone redundancy & data endpoints
   sku                 = "Premium" 
-  admin_enabled       = true
   
-  # Fixes Checkov CKV_AZURE_233
+  # Fix: Disabled Admin Account (CKV_AZURE_137)
+  admin_enabled       = false 
+  
   zone_redundancy_enabled = true
-  
-  # Fixes Checkov CKV_AZURE_237
-  data_endpoint_enabled = true
+  data_endpoint_enabled   = true
 
-  # Fixes Checkov CKV_AZURE_167
   retention_policy {
     days    = 7
     enabled = true
   }
+
+  # Suppressing enterprise-only features for this student project
+  # checkov:skip=CKV_AZURE_164: Content trust is not required for this scope
+  # checkov:skip=CKV_AZURE_139: Private link requires extra DNS setup out of scope
+  # checkov:skip=CKV_AZURE_165: Geo-replication out of scope
+  # checkov:skip=CKV_AZURE_166: Quarantine policy out of scope
 }
 
 # 10. Database
@@ -221,6 +233,11 @@ resource "azurerm_postgresql_flexible_server" "db" {
   storage_mb             = 32768
   sku_name               = "GP_Standard_D2ds_v4"
   zone                   = "1"
+  
+  # Fixes CKV_AZURE_136
+  geo_redundant_backup_enabled = true
+
+  # checkov:skip=CKV2_AZURE_57: Private endpoint requires complex private DNS setup out of scope for this project
 }
 
 # 11. Database Firewall Rule
