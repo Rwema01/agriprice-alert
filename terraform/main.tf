@@ -12,13 +12,13 @@ provider "azurerm" {
   subscription_id = "c63a85fa-9eaa-4faf-b131-af74bb2c7725"
 }
 
-# 1. Resource Group (The container for all our resources)
+# 1. Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = "agriprice-rg"
   location = "spaincentral"
 }
 
-# 2. Virtual Network (The Azure version of a VPC)
+# 2. Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = "agriprice-vnet"
   address_space       = ["10.0.0.0/16"]
@@ -137,9 +137,12 @@ resource "azurerm_linux_virtual_machine" "bastion_vm" {
   admin_username      = "ubuntu"
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
 
+  # Fixes Checkov CKV_AZURE_50 (Extension operations)
+  allow_extension_operations = false
+
   admin_ssh_key {
     username   = "ubuntu"
-    public_key = file("~/.ssh/azure-key.pub")
+    public_key = file("./azure-key.pub")
   }
 
   os_disk {
@@ -163,9 +166,12 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   admin_username      = "ubuntu"
   network_interface_ids = [azurerm_network_interface.app_nic.id]
 
+  # Fixes Checkov CKV_AZURE_50 (Extension operations)
+  allow_extension_operations = false
+
   admin_ssh_key {
     username   = "ubuntu"
-    public_key = file("~/.ssh/azure-key.pub")
+    public_key = file("./azure-key.pub")
   }
 
   os_disk {
@@ -181,13 +187,27 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   }
 }
 
-# 9. Container Registry
+# 9. Container Registry (Fixed for Checkov Security Scans)
 resource "azurerm_container_registry" "acr" {
   name                = "agripriceacr"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  sku                 = "Basic"
+  
+  # Premium SKU is required for zone redundancy & data endpoints
+  sku                 = "Premium" 
   admin_enabled       = true
+  
+  # Fixes Checkov CKV_AZURE_233
+  zone_redundancy_enabled = true
+  
+  # Fixes Checkov CKV_AZURE_237
+  data_endpoint_enabled = true
+
+  # Fixes Checkov CKV_AZURE_167
+  retention_policy {
+    days    = 7
+    enabled = true
+  }
 }
 
 # 10. Database
