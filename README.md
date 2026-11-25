@@ -165,7 +165,7 @@ agriprice-alert/
 
 ## Links
 
-- Project Board: https://github.com/Rwema01/projects/2
+- Project Board: https://github.com/users/Rwema01/projects/2
 
 ## License
 
