@@ -12,6 +12,7 @@ Our CI pipeline integrates three security scanners: Checkov (IaC), pip-audit (De
    - **Finding:** Detected CVEs in `jaraco.context` and `wheel` (build-time dependencies).
    - **Rationale for Accepted Risk:** These are transient build-time dependencies and are not exposed in the final runtime Flask application. We accepted the risk and added them to `.trivyignore` to prevent false-positive pipeline failures.
 
-3. **Checkov Findings:**
-   - **Finding:** Flagged missing encryption on initial configurations, and open ports (22, 5000) on the EC2 instance.
-   - **Remediation / Rationale for Accepted Risk:** We enforce KMS encryption on all storage. For the EC2 instance, ports 22 and 5000 are intentionally open to allow deployment and public access. We skipped specific enterprise rules (e.g., cross-region replication) that require billing setups, but enforce all basic NSG and VPC security rules.
+3. **Checkov Findings (Azure):**
+   - **Finding:** Flagged missing encryption, open ports, and unassociated NSGs on the initial Azure configuration.
+   - **Remediation:** We associated the Network Security Groups (NSGs) with the Public and Private Subnets. We enabled geo-redundant backups on the Azure PostgreSQL Database. We upgraded the Azure Container Registry (ACR) to the Premium SKU to enable zone redundancy and data endpoints.
+   - **Rationale for Accepted Risk:** The Bastion Host requires a public IP for SSH access as per the assignment requirements (suppressed via `CKV_AZURE_119`). Enterprise-only features (e.g., private link, content trust, geo-replication on ACR) were suppressed as they require complex DNS setups or paid tiers that are out of scope for this student project.

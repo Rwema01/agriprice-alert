@@ -45,3 +45,15 @@ config.local.yml
 # Logs
 *.log
 logs/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Cloud / Keys / Archives
+*.pem
+*.zip
+*.key
+azure-key

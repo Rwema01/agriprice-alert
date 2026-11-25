@@ -2,6 +2,24 @@
 
 Real-time crop price tracking for smallholder farmers.
 
+
+## Live Application
+[Access Live App](http://68.221.202.79:5000)
+
+## Architecture Overview
+
+![Azure Architecture Diagram](./architecture.png)
+
+### Component Description
+- **Azure VNet:** Isolated private network containing public and private subnets.
+- **Public Subnet:** Hosts the Bastion Host (Jumpbox) for secure SSH access.
+- **Private Subnet:** Hosts the Application VM and Azure PostgreSQL Database, completely isolated from the internet.
+- **Bastion Host:** Acts as the secure entry point for Ansible and SSH. 
+- **App VM:** Runs the Dockerized Flask application, accessible via port 5000.
+- **Azure PostgreSQL:** Managed database for persistent crop price storage.
+- **Azure Container Registry (ACR):** Private registry storing the Docker images pushed by the CD pipeline.
+
+
 ## African Context
 
 Smallholder farmers in Africa often lack access to current market prices, forcing them to sell to middlemen at unfavorable rates. This project addresses that gap by making real-time pricing information accessible, directly empowering farmers to make better financial decisions.
@@ -30,20 +48,18 @@ Smallholder farmers and agricultural traders across East Africa.
 
 - **Backend:** Python (Flask), Gunicorn
 - **Frontend:** HTML/CSS
-- **Database:** SQLite
+- **Database:** Azure PostgreSQL (Flexible Server)
 - **Containerization:** Docker (Multi-stage build), Docker Compose
-- **Infrastructure as Code:** Terraform (Modular VPC, EC2, NSG)
+- **Infrastructure as Code:** Terraform (Modular Azure VNet, VMs, NSG)
 - **Configuration Management:** Ansible (Roles, SSH Hardening, UFW)
 - **CI/CD & Security:** GitHub Actions, Ruff, Pytest, Checkov, pip-audit, Trivy
 
-## DevSecOps Pipeline (Formative 3)
-
-This project includes a fully automated CI/CD pipeline that runs on every push and pull request to ensure code quality, security, and reliability.
+## DevSecOps Pipeline (Summative)
 
 1.  **Lint & Test:** Uses `Ruff` for Python linting and `Pytest` for unit tests.
 2.  **Build:** Creates a secure, multi-stage Docker image using a non-root user.
 3.  **Security Scans:**
-    -   **Checkov:** Scans Terraform files for AWS misconfigurations.
+    -   **Checkov:** Scans Terraform files for Azure misconfigurations.
     -   **pip-audit:** Scans Python dependencies for known vulnerabilities (CVEs).
     -   **Trivy:** Scans the final Docker container image for OS and library vulnerabilities.
 
@@ -113,7 +129,8 @@ agriprice-alert/
 ├── .github/
 │   ├── CODEOWNERS
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml
+│       └── cd.yml
 ├── ansible/
 │   ├── inventory.ini
 │   ├── playbook.yml
@@ -124,14 +141,13 @@ agriprice-alert/
 │           │   └── main.yml
 │           └── tasks/
 │               └── main.yml
+├── deployment/
+│   └── docker-compose.yml
 ├── terraform/
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── outputs.tf
-│   ├── README.md
-│   └── modules/
-│       └── vpc_compute/
-│           └── main.tf
+│   └── README.md
 ├── templates/
 │   ├── index.html
 │   └── admin.html
@@ -139,7 +155,6 @@ agriprice-alert/
 ├── .gitignore
 ├── .trivyignore
 ├── Dockerfile
-├── docker-compose.yml
 ├── LICENSE
 ├── README.md
 ├── SECURITY.md

@@ -4,10 +4,11 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker and UFW)
+- name: Install dependencies (Docker, Docker Compose, UFW)
   apt:
     name: 
       - docker.io
+      - docker-compose
       - ufw
     state: present
 
@@ -36,15 +37,32 @@
     line: 'PermitRootLogin no'
   notify: restart ssh
 
-- name: Pull the application image
-  community.docker.docker_image:
-    name: agriprice-alert:latest
-    source: pull
+- name: Log in to Azure ACR
+  shell: |
+    echo "{{ lookup('env', 'ACR_PASSWORD') }}" | docker login agripriceacr.azurecr.io -u {{ lookup('env', 'ACR_USERNAME') }} --password-stdin
+  register: acr_login
 
-- name: Run the AgriPrice container
-  community.docker.docker_container:
-    name: agriprice-app
-    image: agriprice-alert:latest
-    state: started
-    ports:
-      - "5000:5000"
+- name: Create deployment directory
+  file:
+    path: /home/ubuntu/deployment
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy docker-compose.yml to the server
+  copy:
+    src: ../../deployment/docker-compose.yml
+    dest: /home/ubuntu/deployment/docker-compose.yml
+
+- name: Deploy the application using Docker Compose
+  shell: docker-compose up -d
+  args:
+    chdir: /home/ubuntu/deployment
+  environment:
+    ECR_REGISTRY: "agripriceacr.azurecr.io"
+    ECR_REPO: "agriprice-app"
+    DB_HOST: "agriprice-db-server.postgres.database.azure.com"
+    DB_NAME: "agriprice"
+    DB_USER: "postgres"
+    DB_PASSWORD: "TerraformPassword123!"
