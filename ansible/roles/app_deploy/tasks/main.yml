@@ -4,11 +4,11 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker, Docker Compose, UFW)
+- name: Install dependencies (Docker, Docker Compose Plugin, UFW)
   apt:
     name: 
       - docker.io
-      - docker-compose
+      - docker-compose-plugin
       - ufw
     state: present
 
