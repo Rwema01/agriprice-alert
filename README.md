@@ -2,6 +2,24 @@
 
 Real-time crop price tracking for smallholder farmers.
 
+
+## Live Application
+[Access Live App](http://68.221.202.79:5000)
+
+## Architecture Overview
+
+![Azure Architecture Diagram](./architecture.png)
+
+### Component Description
+- **Azure VNet:** Isolated private network containing public and private subnets.
+- **Public Subnet:** Hosts the Bastion Host (Jumpbox) for secure SSH access.
+- **Private Subnet:** Hosts the Application VM and Azure PostgreSQL Database, completely isolated from the internet.
+- **Bastion Host:** Acts as the secure entry point for Ansible and SSH. 
+- **App VM:** Runs the Dockerized Flask application, accessible via port 5000.
+- **Azure PostgreSQL:** Managed database for persistent crop price storage.
+- **Azure Container Registry (ACR):** Private registry storing the Docker images pushed by the CD pipeline.
+
+
 ## African Context
 
 Smallholder farmers in Africa often lack access to current market prices, forcing them to sell to middlemen at unfavorable rates. This project addresses that gap by making real-time pricing information accessible, directly empowering farmers to make better financial decisions.
