@@ -4,11 +4,11 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker, Docker Compose Plugin, UFW)
+- name: Install dependencies (Docker, Docker Compose, UFW)
   apt:
     name: 
       - docker.io
-      - docker-compose-plugin
+      - docker-compose
       - ufw
     state: present
 
@@ -56,7 +56,7 @@
     dest: /home/ubuntu/deployment/docker-compose.yml
 
 - name: Deploy the application using Docker Compose
-  shell: docker compose up -d --remove-orphans
+  shell: docker-compose up -d --remove-orphans
   args:
     chdir: /home/ubuntu/deployment
   environment:
