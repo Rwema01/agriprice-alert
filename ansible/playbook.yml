@@ -1,6 +1,6 @@
 ---
 - name: Deploy AgriPrice Alert App
-  hosts: webservers
+  hosts: app_server
   become: yes
   roles:
     - app_deploy

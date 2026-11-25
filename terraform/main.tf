@@ -236,9 +236,3 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "db_firewall" {
   start_ip_address = "10.0.2.0"
   end_ip_address   = "10.0.2.255"
 }
-
-# 12. Outputs
-output "bastion_public_ip" { value = azurerm_public_ip.bastion_ip.ip_address }
-output "app_private_ip" { value = azurerm_network_interface.app_nic.private_ip_address }
-output "acr_url" { value = azurerm_container_registry.acr.login_server }
-output "db_endpoint" { value = azurerm_postgresql_flexible_server.db.fqdn }

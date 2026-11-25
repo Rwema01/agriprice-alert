@@ -51,11 +51,9 @@ logs/
 *.tfstate
 *.tfstate.backup
 *.tfvars
-.terraform.lock.hcl
 
-# AWS & Keys
+# Cloud / Keys / Archives
 *.pem
-awscliv2.zip
-
-# Azure
-*.pub
+*.zip
+*.key
+azure-key

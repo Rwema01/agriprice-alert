@@ -6,7 +6,7 @@ from flask import Flask, redirect, render_template, request, url_for
 app = Flask(__name__)
 
 def get_db():
-    # Connect to RDS using environment variables
+    # Connect to Azure PostgreSQL using environment variables
     conn = psycopg2.connect(
         host=os.environ.get('DB_HOST'),
         database=os.environ.get('DB_NAME', 'agriprice'),

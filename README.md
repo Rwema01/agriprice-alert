@@ -30,20 +30,18 @@ Smallholder farmers and agricultural traders across East Africa.
 
 - **Backend:** Python (Flask), Gunicorn
 - **Frontend:** HTML/CSS
-- **Database:** SQLite
+- **Database:** Azure PostgreSQL (Flexible Server)
 - **Containerization:** Docker (Multi-stage build), Docker Compose
-- **Infrastructure as Code:** Terraform (Modular VPC, EC2, NSG)
+- **Infrastructure as Code:** Terraform (Modular Azure VNet, VMs, NSG)
 - **Configuration Management:** Ansible (Roles, SSH Hardening, UFW)
 - **CI/CD & Security:** GitHub Actions, Ruff, Pytest, Checkov, pip-audit, Trivy
 
-## DevSecOps Pipeline (Formative 3)
-
-This project includes a fully automated CI/CD pipeline that runs on every push and pull request to ensure code quality, security, and reliability.
+## DevSecOps Pipeline (Summative)
 
 1.  **Lint & Test:** Uses `Ruff` for Python linting and `Pytest` for unit tests.
 2.  **Build:** Creates a secure, multi-stage Docker image using a non-root user.
 3.  **Security Scans:**
-    -   **Checkov:** Scans Terraform files for AWS misconfigurations.
+    -   **Checkov:** Scans Terraform files for Azure misconfigurations.
     -   **pip-audit:** Scans Python dependencies for known vulnerabilities (CVEs).
     -   **Trivy:** Scans the final Docker container image for OS and library vulnerabilities.
 
@@ -113,7 +111,8 @@ agriprice-alert/
 ├── .github/
 │   ├── CODEOWNERS
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml
+│       └── cd.yml
 ├── ansible/
 │   ├── inventory.ini
 │   ├── playbook.yml
@@ -124,14 +123,13 @@ agriprice-alert/
 │           │   └── main.yml
 │           └── tasks/
 │               └── main.yml
+├── deployment/
+│   └── docker-compose.yml
 ├── terraform/
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── outputs.tf
-│   ├── README.md
-│   └── modules/
-│       └── vpc_compute/
-│           └── main.tf
+│   └── README.md
 ├── templates/
 │   ├── index.html
 │   └── admin.html
@@ -139,7 +137,6 @@ agriprice-alert/
 ├── .gitignore
 ├── .trivyignore
 ├── Dockerfile
-├── docker-compose.yml
 ├── LICENSE
 ├── README.md
 ├── SECURITY.md
