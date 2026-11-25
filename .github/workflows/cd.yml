@@ -47,6 +47,12 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/azure-key
           chmod 400 ~/.ssh/azure-key
 
+      - name: Add Bastion to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
       - name: Install Ansible
         run: |
           python3 -m pip install --upgrade pip
