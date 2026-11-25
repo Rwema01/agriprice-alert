@@ -4,13 +4,23 @@
     update_cache: yes
   changed_when: false
 
-- name: Install dependencies (Docker, Docker Compose, UFW)
+- name: Remove old docker-compose (v1)
+  apt:
+    name: docker-compose
+    state: absent
+
+- name: Install Docker and UFW
   apt:
     name: 
       - docker.io
-      - docker-compose
       - ufw
     state: present
+
+- name: Install Docker Compose v2 Plugin
+  shell: |
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
 - name: Start Docker service
   service:
@@ -55,8 +65,11 @@
     src: "{{ playbook_dir }}/../deployment/docker-compose.yml"
     dest: /home/ubuntu/deployment/docker-compose.yml
 
-- name: Deploy the application using Docker Compose
-  shell: docker-compose up -d --remove-orphans
+- name: Deploy the application using Docker Compose v2
+  shell: |
+    docker compose down --remove-orphans || true
+    docker compose pull
+    docker compose up -d --remove-orphans --force-recreate
   args:
     chdir: /home/ubuntu/deployment
   environment:
