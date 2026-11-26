@@ -1,3 +1,4 @@
+
 ---
 - name: Update apt cache
   apt:
@@ -11,7 +12,7 @@
 
 - name: Install Docker and UFW
   apt:
-    name: 
+    name:
       - docker.io
       - ufw
     state: present
@@ -49,8 +50,11 @@
 
 - name: Log in to Azure ACR
   shell: |
-    echo "{{ lookup('env', 'ACR_PASSWORD') }}" | docker login agripriceacr.azurecr.io -u {{ lookup('env', 'ACR_USERNAME') }} --password-stdin
-  register: acr_login
+    printf '%s' "$ACR_PASSWORD" | docker login agripriceacr.azurecr.io --username "$ACR_USERNAME" --password-stdin
+  environment:
+    ACR_USERNAME: "{{ lookup('env', 'ACR_USERNAME') }}"
+    ACR_PASSWORD: "{{ lookup('env', 'ACR_PASSWORD') }}"
+  no_log: true
 
 - name: Create deployment directory
   file:
@@ -64,11 +68,13 @@
   copy:
     src: "{{ playbook_dir }}/../deployment/docker-compose.yml"
     dest: /home/ubuntu/deployment/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
 
 - name: Deploy the application using Docker Compose v2
   shell: |
-    docker compose down --remove-orphans || true
-    docker compose pull
+    docker compose pull &&
     docker compose up -d --remove-orphans --force-recreate
   args:
     chdir: /home/ubuntu/deployment
@@ -79,3 +85,5 @@
     DB_NAME: "agriprice"
     DB_USER: "postgres"
     DB_PASSWORD: "{{ lookup('env', 'DB_PASSWORD') }}"
+    FLASK_SECRET_KEY: "{{ lookup('env', 'FLASK_SECRET_KEY') }}"
+  no_log: true
