@@ -7,7 +7,7 @@ The project uses Flask, PostgreSQL, Docker, and Microsoft Azure, supported by an
 
 ## Live Application
 
-[Access AgriPrice Tech](http://68.221.202.79/)
+[Access AgriPrice Tech](http://158.158.105.80/)
 
 ## Project Coverage
 
