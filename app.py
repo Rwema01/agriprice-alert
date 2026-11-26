@@ -31,7 +31,7 @@ def init_db():
         conn.commit()
         cursor.close()
         conn.close()
-    except Exception as e:
+    except psycopg2.Error as e:
         print(f"Database connection failed: {e}")
 
 @app.route('/')
