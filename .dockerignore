@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 .env
 prices.db
+.venv/
+.pytest_cache/
+.ruff_cache/
+.DS_Store

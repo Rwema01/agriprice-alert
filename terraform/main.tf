@@ -1,3 +1,4 @@
+
 terraform {
   required_providers {
     azurerm = {
@@ -32,7 +33,6 @@ resource "azurerm_subnet" "public_subnet" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
-  depends_on           = [azurerm_virtual_network.vnet]
 }
 
 # 4. Private Subnet
@@ -41,15 +41,16 @@ resource "azurerm_subnet" "private_subnet" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
-  depends_on           = [azurerm_virtual_network.vnet]
 }
 
 # 5. Network Security Groups
+
 resource "azurerm_network_security_group" "bastion_nsg" {
   name                = "bastion-nsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # SSH is restricted to the administrator's public IP.
   security_rule {
     name                       = "SSH"
     priority                   = 100
@@ -61,6 +62,19 @@ resource "azurerm_network_security_group" "bastion_nsg" {
     source_address_prefix      = var.my_ip
     destination_address_prefix = "*"
   }
+
+  # HTTP is restricted to the administrator's public IP.
+  security_rule {
+    name                       = "Allow-HTTP-80"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = var.my_ip
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_network_security_group" "app_nsg" {
@@ -68,6 +82,7 @@ resource "azurerm_network_security_group" "app_nsg" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # SSH to the application VM is allowed only through the Bastion subnet.
   security_rule {
     name                       = "SSH"
     priority                   = 100
@@ -79,7 +94,8 @@ resource "azurerm_network_security_group" "app_nsg" {
     source_address_prefix      = "10.0.1.0/24"
     destination_address_prefix = "*"
   }
-  
+
+  # Application traffic is allowed only from the Bastion subnet.
   security_rule {
     name                       = "HTTP"
     priority                   = 110
@@ -88,12 +104,13 @@ resource "azurerm_network_security_group" "app_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "5000"
-    source_address_prefix      = "*"
+    source_address_prefix      = "10.0.1.0/24"
     destination_address_prefix = "*"
   }
 }
 
-# NEW: Associate NSGs with Subnets (Fixes CKV2_AZURE_31)
+# 6. Associate NSGs with Subnets
+
 resource "azurerm_subnet_network_security_group_association" "public" {
   subnet_id                 = azurerm_subnet.public_subnet.id
   network_security_group_id = azurerm_network_security_group.bastion_nsg.id
@@ -104,7 +121,8 @@ resource "azurerm_subnet_network_security_group_association" "private" {
   network_security_group_id = azurerm_network_security_group.app_nsg.id
 }
 
-# 6. Public IPs
+# 7. Public IP
+
 resource "azurerm_public_ip" "bastion_ip" {
   name                = "bastion-ip"
   location            = azurerm_resource_group.rg.location
@@ -113,7 +131,8 @@ resource "azurerm_public_ip" "bastion_ip" {
   sku                 = "Standard"
 }
 
-# 7. Network Interfaces
+# 8. Network Interfaces
+
 resource "azurerm_network_interface" "bastion_nic" {
   name                = "bastion-nic"
   location            = azurerm_resource_group.rg.location
@@ -128,16 +147,31 @@ resource "azurerm_network_interface" "bastion_nic" {
   }
 }
 
-# 8. Virtual Machines
-resource "azurerm_linux_virtual_machine" "bastion_vm" {
-  name                = "bastion-vm"
-  resource_group_name = azurerm_resource_group.rg.name
+resource "azurerm_network_interface" "app_nic" {
+  name                = "app-nic"
   location            = azurerm_resource_group.rg.location
-  size                = "Standard_B2ts_v2"
-  admin_username      = "ubuntu"
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.private_subnet.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+# 9. Virtual Machines
+
+resource "azurerm_linux_virtual_machine" "bastion_vm" {
+  name                  = "bastion-vm"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = "Standard_B2ts_v2"
+  admin_username        = "ubuntu"
   network_interface_ids = [azurerm_network_interface.bastion_nic.id]
 
-  allow_extension_operations = false
+  # Preserve the existing Azure VM agent configuration.
+  allow_extension_operations        = true
+  vm_agent_platform_updates_enabled = true
 
   admin_ssh_key {
     username   = "ubuntu"
@@ -158,14 +192,21 @@ resource "azurerm_linux_virtual_machine" "bastion_vm" {
 }
 
 resource "azurerm_linux_virtual_machine" "app_vm" {
-  name                = "app-vm"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  size                = "Standard_B2ts_v2"
-  admin_username      = "ubuntu"
+  name                  = "app-vm"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = "Standard_B2ts_v2"
+  admin_username        = "ubuntu"
   network_interface_ids = [azurerm_network_interface.app_nic.id]
 
-  allow_extension_operations = false
+  # Preserve the existing VM agent configuration.
+  allow_extension_operations        = true
+  vm_agent_platform_updates_enabled = true
+
+  # Preserve the existing managed identity used for ACR access.
+  identity {
+    type = "SystemAssigned"
+  }
 
   admin_ssh_key {
     username   = "ubuntu"
@@ -185,17 +226,18 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   }
 }
 
-# 9. Container Registry
+# 10. Container Registry
+
 resource "azurerm_container_registry" "acr" {
   name                = "agripriceacr"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  
-  sku                 = "Premium" 
-  
-  # Fix: Disabled Admin Account (CKV_AZURE_137)
-  admin_enabled       = false 
-  
+
+  sku = "Premium"
+
+  # Registry admin account remains disabled.
+  admin_enabled = false
+
   zone_redundancy_enabled = true
   data_endpoint_enabled   = true
 
@@ -204,14 +246,15 @@ resource "azurerm_container_registry" "acr" {
     enabled = true
   }
 
-  # Suppressing enterprise-only features for this student project
+  # Suppressing enterprise-only features outside this project's scope.
   # checkov:skip=CKV_AZURE_164: Content trust is not required for this scope
   # checkov:skip=CKV_AZURE_139: Private link requires extra DNS setup out of scope
   # checkov:skip=CKV_AZURE_165: Geo-replication out of scope
   # checkov:skip=CKV_AZURE_166: Quarantine policy out of scope
 }
 
-# 10. Database
+# 11. PostgreSQL Database Server
+
 resource "azurerm_postgresql_flexible_server" "db" {
   name                   = "agriprice-db-server"
   resource_group_name    = azurerm_resource_group.rg.name
@@ -222,17 +265,44 @@ resource "azurerm_postgresql_flexible_server" "db" {
   storage_mb             = 32768
   sku_name               = "GP_Standard_D2ds_v4"
   zone                   = "1"
-  
-  # Fixes CKV_AZURE_136
-  geo_redundant_backup_enabled = true
+
+  # Keep disabled to match the existing server and avoid forced replacement.
+  geo_redundant_backup_enabled = false
 
   # checkov:skip=CKV2_AZURE_57: Private endpoint requires complex private DNS setup out of scope for this project
 }
 
-# 11. Database Firewall Rule
+# Existing application database.
+resource "azurerm_postgresql_flexible_server_database" "agriprice" {
+  name      = "agriprice"
+  server_id = azurerm_postgresql_flexible_server.db.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+}
+
+# 12. PostgreSQL Firewall Rule
+
 resource "azurerm_postgresql_flexible_server_firewall_rule" "db_firewall" {
   name             = "AllowPrivateSubnet"
   server_id        = azurerm_postgresql_flexible_server.db.id
   start_ip_address = "10.0.2.0"
   end_ip_address   = "10.0.2.255"
+}
+
+# Preserve existing network resources when moving them
+# from the previous network module back to root resources.
+
+moved {
+  from = module.network.azurerm_virtual_network.this
+  to   = azurerm_virtual_network.vnet
+}
+
+moved {
+  from = module.network.azurerm_subnet.public
+  to   = azurerm_subnet.public_subnet
+}
+
+moved {
+  from = module.network.azurerm_subnet.private
+  to   = azurerm_subnet.private_subnet
 }

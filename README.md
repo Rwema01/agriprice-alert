@@ -14,7 +14,7 @@ Real-time crop price tracking for smallholder farmers.
 - **Azure VNet:** Isolated private network containing public and private subnets.
 - **Public Subnet:** Hosts the Bastion Host (Jumpbox) for secure SSH access.
 - **Private Subnet:** Hosts the Application VM and Azure PostgreSQL Database, completely isolated from the internet.
-- **Bastion Host:** Acts as the secure entry point for Ansible and SSH. 
+- **Bastion Host:** Acts as the secure entry point for Ansible and SSH.
 - **App VM:** Runs the Dockerized Flask application, accessible via port 5000.
 - **Azure PostgreSQL:** Managed database for persistent crop price storage.
 - **Azure Container Registry (ACR):** Private registry storing the Docker images pushed by the CD pipeline.
