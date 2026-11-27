@@ -188,7 +188,7 @@ jobs:
 
           echo "Testing TCP connectivity to Bastion..."
 
-          nc -vz -w 15 68.221.202.79 22
+          nc -vz -w 15 158.158.105.80 22
 
           echo "Testing Bastion SSH authentication..."
 
@@ -198,7 +198,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o IdentitiesOnly=yes \
             -i "$HOME/.ssh/azure-key" \
-            ubuntu@68.221.202.79 \
+            ubuntu@158.158.105.80 \
             "echo BASTION_SSH_SUCCESS"
 
       - name: Test Ansible SSH connectivity
