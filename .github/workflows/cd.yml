@@ -1,8 +1,10 @@
+
 name: Continuous Deployment
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -18,54 +20,152 @@ jobs:
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies and test
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install ruff pytest ansible
           ruff check .
           pytest
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Login to Azure Container Registry
-        run: az acr login --name agripriceacr
+        run: |
+          az acr login --name agripriceacr
 
       - name: Build, tag, and push image to Azure ACR
         run: |
-          docker build -t agripriceacr.azurecr.io/agriprice-app:${{ github.sha }} -t agripriceacr.azurecr.io/agriprice-app:latest .
+          docker build \
+            -t agripriceacr.azurecr.io/agriprice-app:${{ github.sha }} \
+            -t agripriceacr.azurecr.io/agriprice-app:latest \
+            .
+
           docker push agripriceacr.azurecr.io/agriprice-app:${{ github.sha }}
           docker push agripriceacr.azurecr.io/agriprice-app:latest
 
       - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/azure-key
-          chmod 400 ~/.ssh/azure-key
+        shell: bash
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/azure-key
+          chmod 600 ~/.ssh/azure-key
 
       - name: Add Bastion to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+        shell: bash
         env:
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-
-      - name: Install Ansible
         run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
-          ansible-galaxy collection install community.docker
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install community.docker community.general
+
+      - name: Temporarily allow GitHub Actions runner SSH
+        id: allow-runner-ssh
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASTION_NSG="bastion-nsg"
+          RULE_NAME="gha-ssh-${GITHUB_RUN_ID}"
+
+          RUNNER_IP="$(curl -4 -fsS https://api.ipify.org)"
+
+          if [[ ! "$RUNNER_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: Could not determine a valid IPv4 address."
+            exit 1
+          fi
+
+          echo "GitHub Actions runner IP: ${RUNNER_IP}"
+
+          BASTION_RG="$(az network nsg list \
+            --query "[?name=='${BASTION_NSG}'].resourceGroup | [0]" \
+            --output tsv)"
+
+          if [[ -z "$BASTION_RG" || "$BASTION_RG" == "None" ]]; then
+            echo "ERROR: Could not find the Bastion NSG resource group."
+            exit 1
+          fi
+
+          echo "Bastion NSG resource group: ${BASTION_RG}"
+
+          echo "BASTION_RG=${BASTION_RG}" >> "$GITHUB_ENV"
+          echo "BASTION_SSH_RULE=${RULE_NAME}" >> "$GITHUB_ENV"
+
+          USED_PRIORITIES="$(az network nsg rule list \
+            --resource-group "$BASTION_RG" \
+            --nsg-name "$BASTION_NSG" \
+            --query "[].priority" \
+            --output tsv)"
+
+          PRIORITY=""
+
+          for candidate in $(seq 110 4096); do
+            if ! grep -Fxq "$candidate" <<< "$USED_PRIORITIES"; then
+              PRIORITY="$candidate"
+              break
+            fi
+          done
+
+          if [[ -z "$PRIORITY" ]]; then
+            echo "ERROR: No available NSG rule priority."
+            exit 1
+          fi
+
+          az network nsg rule create \
+            --resource-group "$BASTION_RG" \
+            --nsg-name "$BASTION_NSG" \
+            --name "$RULE_NAME" \
+            --priority "$PRIORITY" \
+            --direction Inbound \
+            --access Allow \
+            --protocol Tcp \
+            --source-address-prefixes "${RUNNER_IP}/32" \
+            --source-port-ranges '*' \
+            --destination-address-prefixes '*' \
+            --destination-port-ranges 22
+
+          echo "Temporary SSH access granted to ${RUNNER_IP}/32."
 
       - name: Run Ansible Playbook
+        shell: bash
         run: |
-          ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+          set -euo pipefail
+
+          ansible-playbook \
+            -i ansible/inventory.ini \
+            ansible/playbook.yml
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
+
+      - name: Remove temporary GitHub Actions SSH rule
+        if: always()
+        shell: bash
+        run: |
+          if [[ -z "${BASTION_RG:-}" || -z "${BASTION_SSH_RULE:-}" ]]; then
+            echo "No temporary SSH rule was registered for cleanup."
+            exit 0
+          fi
+
+          az network nsg rule delete \
+            --resource-group "$BASTION_RG" \
+            --nsg-name bastion-nsg \
+            --name "$BASTION_SSH_RULE" || true
+
+          echo "Temporary GitHub Actions SSH rule cleanup completed."
