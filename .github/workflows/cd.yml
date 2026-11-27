@@ -1,4 +1,3 @@
-
 name: Continuous Deployment
 
 on:
@@ -34,12 +33,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Login to Azure Container Registry
-        run: |
-          az acr login --name agripriceacr
-          printf '%s' "$ACR_PASSWORD" | docker login agripriceacr.azurecr.io --username "$ACR_USERNAME" --password-stdin
-        env:
-          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+        run: az acr login --name agripriceacr
 
       - name: Build, tag, and push image to Azure ACR
         run: |
@@ -73,7 +67,5 @@ jobs:
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
         env:
-          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
