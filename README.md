@@ -1,212 +1,176 @@
+# AgriPrice Alert
 
-# AgriPrice Tech
+Real-time crop price tracking for smallholder farmers.
 
-AgriPrice Tech is an agricultural market price information platform designed to help farmers and agricultural traders access and manage crop price records across Kigali City and Rwamagana District in Rwanda.
-
-The project uses Flask, PostgreSQL, Docker, and Microsoft Azure, supported by an automated DevSecOps pipeline.
 
 ## Live Application
+[Access Live App](http://68.221.202.79:5000)
 
-[Access AgriPrice Tech](http://158.158.105.80/)
-
-## Project Coverage
-
-**Locations:**
-- Kigali City: Gasabo, Kicukiro, and Nyarugenge.
-- Rwamagana District.
-
-**Supported crops:**
-Maize, Beans, Rice, Irish potatoes, Sweet potatoes, Cassava, Sorghum, Wheat, Soybeans, Peas, Groundnuts, Tomatoes, Onions, Cabbages, Carrots, Avocados, and Bananas.
-
-The application supports these crops and locations, but verified price records are not necessarily available for all of them.
-
-## Core Features
-
-- View agricultural price records.
-- Filter records by crop and district.
-- Add, edit, and permanently delete price records.
-- Organize records by crop, district, sector, price, and unit.
-- Store records in PostgreSQL.
-- Server-side input validation.
-- CSRF protection.
-- Application health monitoring through `/health`.
-
-## Application Access and Security
-
-The application uses public access without registration, login, administrator accounts, or user roles. Anyone accessing the application can view, add, edit, and delete records.
-
-Input validation, parameterized SQL queries, and CSRF protection are implemented to improve application security. CSRF protection does not replace authentication or authorization.
-
-## Architecture
+## Architecture Overview
 
 ![Azure Architecture Diagram](./architecture.png)
 
-The application is deployed on Microsoft Azure using:
+### Component Description
+- **Azure VNet:** Isolated private network containing public and private subnets.
+- **Public Subnet:** Hosts the Bastion Host (Jumpbox) for secure SSH access.
+- **Private Subnet:** Hosts the Application VM and Azure PostgreSQL Database, completely isolated from the internet.
+- **Bastion Host:** Acts as the secure entry point for Ansible and SSH.
+- **App VM:** Runs the Dockerized Flask application, accessible via port 5000.
+- **Azure PostgreSQL:** Managed database for persistent crop price storage.
+- **Azure Container Registry (ACR):** Private registry storing the Docker images pushed by the CD pipeline.
 
-- Azure Virtual Network and Network Security Groups.
-- Bastion VM for SSH access and Nginx reverse proxy.
-- Application VM running the Docker container.
-- Azure PostgreSQL Flexible Server.
-- Azure Container Registry (ACR).
+
+## African Context
+
+Smallholder farmers in Africa often lack access to current market prices, forcing them to sell to middlemen at unfavorable rates. This project addresses that gap by making real-time pricing information accessible, directly empowering farmers to make better financial decisions.
+
+## Team Members
+
+- Rwema Gisa - DevOps Lead - 1489019427
+- Kelly Nshuti Dushimimana - App Lead - 5830290256
+
+## Project Overview
+
+AgriPrice Alert is a web application designed to bridge the information gap in the agricultural sector. It allows users to view current market prices for staple crops like Maize, Beans, and Rice. The application features a simple, mobile-friendly interface where farmers can check prices. It also includes an admin panel that allows administrators to update the crop prices in the database to keep the data current and accurate.
+
+## Target Users
+
+Smallholder farmers and agricultural traders across East Africa.
+
+## Core Features
+
+- **Feature 1:** View current prices for staple crops (Maize, Beans, Rice).
+- **Feature 2:** Admin panel to update crop prices.
+- **Feature 3:** Health check endpoint (`/health`) for container monitoring.
+- **Feature 4:** Fully automated DevSecOps CI/CD pipeline with security scans.
 
 ## Technology Stack
 
-| Category | Technology |
-|---|---|
-| Backend | Python, Flask |
-| Frontend | HTML, CSS |
-| Database | PostgreSQL |
-| Application Server | Gunicorn |
-| Containerization | Docker, Docker Compose |
-| Cloud | Microsoft Azure |
-| Infrastructure as Code | Terraform |
-| Configuration Management | Ansible |
-| CI/CD | GitHub Actions |
-| Code Quality | Ruff |
-| Testing | Pytest |
-| Security Scanning | Checkov, pip-audit, Trivy |
+- **Backend:** Python (Flask), Gunicorn
+- **Frontend:** HTML/CSS
+- **Database:** Azure PostgreSQL (Flexible Server)
+- **Containerization:** Docker (Multi-stage build), Docker Compose
+- **Infrastructure as Code:** Terraform (Modular Azure VNet, VMs, NSG)
+- **Configuration Management:** Ansible (Roles, SSH Hardening, UFW)
+- **CI/CD & Security:** GitHub Actions, Ruff, Pytest, Checkov, pip-audit, Trivy
 
-## DevSecOps Pipeline
+## DevSecOps Pipeline (Summative)
 
-**Continuous Integration (CI):**
-- Ruff for code quality.
-- Pytest for automated testing.
-- Docker image building.
-- Checkov for Terraform security scanning.
-- pip-audit for dependency scanning.
-- Trivy for container vulnerability scanning.
-
-**Continuous Deployment (CD):**
-- Azure authentication.
-- Docker image build and push to Azure Container Registry.
-- SSH connection and Ansible deployment to the Application VM.
+1.  **Lint & Test:** Uses `Ruff` for Python linting and `Pytest` for unit tests.
+2.  **Build:** Creates a secure, multi-stage Docker image using a non-root user.
+3.  **Security Scans:**
+    -   **Checkov:** Scans Terraform files for Azure misconfigurations.
+    -   **pip-audit:** Scans Python dependencies for known vulnerabilities (CVEs).
+    -   **Trivy:** Scans the final Docker container image for OS and library vulnerabilities.
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Running with Docker Compose (Recommended)
 
-- Python 3.11
+1. Ensure you have Docker Desktop installed and running.
+2. Clone the repository and navigate into the project directory.
+3. Run the following command:
+   ```bash
+   docker-compose up --build
+   ```
+4. Open your browser and go to http://localhost:5000
+
+### Option 2: Running Locally with Python
+
+#### Prerequisites
+
+- Python 3.9+
 - Git
-- PostgreSQL
 
-### Installation
+#### Installation
 
-Clone the repository:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Rwema01/agriprice-alert.git
+   ```
+2. Navigate into the project directory:
+   ```bash
+   cd agriprice-alert
+   ```
+3. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
+4. Activate the virtual environment:
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - On Mac/Linux:
+     ```bash
+     source venv/bin/activate
+     ```
+5. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-git clone https://github.com/Rwema01/agriprice-alert.git
-cd agriprice-alert
-```
-
-Create and activate a virtual environment:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Configure environment variables:
-
-```bash
-export FLASK_SECRET_KEY="your-secure-secret-key"
-export DB_HOST="your-postgresql-host"
-export DB_PORT="5432"
-export DB_NAME="agriprice"
-export DB_USER="your-database-user"
-export DB_PASSWORD="your-database-password"
-export DB_SSLMODE="require"
-```
-
-Run the application:
+#### Run the Application
 
 ```bash
 python app.py
 ```
 
-Open the application at http://127.0.0.1:5000.
+## Usage
 
-Health check: http://127.0.0.1:5000/health.
-
-A reachable PostgreSQL database with the required schema is necessary.
-
-Never commit database credentials or secret keys to GitHub.
-
-## Testing
-
-Run automated tests:
-
-```bash
-python -m pytest -v
-```
-
-Check code quality:
-
-```bash
-ruff check app.py test_app.py conftest.py
-```
-
-Check Python syntax:
-
-```bash
-python -m py_compile app.py test_app.py conftest.py
-```
-
-Check dependencies:
-
-```bash
-python -m pip check
-```
+1. Open your browser and go to http://127.0.0.1:5000 (or http://localhost:5000 if using Docker).
+2. You will see the list of current crop prices.
+3. Click Admin Panel to update a price and see it reflect on the main page.
 
 ## Project Structure
 
 ```text
 agriprice-alert/
-├── .github/workflows/
-│   ├── ci.yml
-│   └── cd.yml
+├── .github/
+│   ├── CODEOWNERS
+│   └── workflows/
+│       ├── ci.yml
+│       └── cd.yml
 ├── ansible/
+│   ├── inventory.ini
+│   ├── playbook.yml
+│   ├── README.md
+│   └── roles/
+│       └── app_deploy/
+│           ├── handlers/
+│           │   └── main.yml
+│           └── tasks/
+│               └── main.yml
 ├── deployment/
+│   └── docker-compose.yml
 ├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── README.md
 ├── templates/
-│   └── index.html
-├── app.py
-├── test_app.py
-├── conftest.py
+│   ├── index.html
+│   └── admin.html
+├── .dockerignore
+├── .gitignore
+├── .trivyignore
 ├── Dockerfile
-├── requirements.txt
-├── architecture.png
-├── AI_USE.md
-├── CHANGELOG.md
-├── SECURITY.md
 ├── LICENSE
-└── README.md
+├── README.md
+├── SECURITY.md
+├── app.py
+├── requirements.txt
+└── test_app.py
 ```
 
-## Project Links
+## Links
 
-- [GitHub Repository](https://github.com/Rwema01/agriprice-alert)
-- [Project Board](https://github.com/Rwema01/agriprice-alert/projects)
-- [Live Application](http://68.221.202.79/)
-
-## Team Members
-
-- **Rwema Gisa** – DevOps Lead
-- **Kelly Nshuti Dushimimana** – App Lead
+- Project Board: https://github.com/Rwema01/projects/2
 
 ## License
 
-MIT License. See [LICENSE](./LICENSE).
+MIT
 
 ## AI Use Declaration
 
-AI tools were used for documentation formatting, Markdown writing, and debugging error logs, as permitted by the course policy.
-
-Core Terraform, Ansible, and CI/CD YAML configurations were written manually.
-
-See [AI_USE.md](./AI_USE.md) for details.
+We used AI tools for documentation formatting, Markdown writing, and debugging error logs (as permitted by the course policy). All core Terraform, Ansible, and CI YAML configurations were written manually. For full details, please read our [AI Use Annex](./AI_USE.md).
