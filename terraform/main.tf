@@ -199,11 +199,11 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   admin_username        = "ubuntu"
   network_interface_ids = [azurerm_network_interface.app_nic.id]
 
-  # Preserve the existing VM agent configuration.
+  # Preserve the existing Azure VM agent configuration.
   allow_extension_operations        = true
   vm_agent_platform_updates_enabled = true
 
-  # Preserve the existing managed identity used for ACR access.
+  # System-assigned identity for secure Azure service access.
   identity {
     type = "SystemAssigned"
   }
@@ -253,7 +253,15 @@ resource "azurerm_container_registry" "acr" {
   # checkov:skip=CKV_AZURE_166: Quarantine policy out of scope
 }
 
-# 11. PostgreSQL Database Server
+# 11. Grant the application VM permission to pull images from ACR.
+
+resource "azurerm_role_assignment" "app_vm_acr_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_linux_virtual_machine.app_vm.identity[0].principal_id
+}
+
+# 12. PostgreSQL Database Server
 
 resource "azurerm_postgresql_flexible_server" "db" {
   name                   = "agriprice-db-server"
@@ -280,7 +288,7 @@ resource "azurerm_postgresql_flexible_server_database" "agriprice" {
   collation = "en_US.utf8"
 }
 
-# 12. PostgreSQL Firewall Rule
+# 13. PostgreSQL Firewall Rule
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "db_firewall" {
   name             = "AllowPrivateSubnet"
