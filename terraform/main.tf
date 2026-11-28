@@ -288,13 +288,22 @@ resource "azurerm_postgresql_flexible_server_database" "agriprice" {
   collation = "en_US.utf8"
 }
 
-# 13. PostgreSQL Firewall Rule
+# 13. PostgreSQL Firewall Rules
 
+# Allow traffic from the private application subnet.
 resource "azurerm_postgresql_flexible_server_firewall_rule" "db_firewall" {
   name             = "AllowPrivateSubnet"
   server_id        = azurerm_postgresql_flexible_server.db.id
   start_ip_address = "10.0.2.0"
   end_ip_address   = "10.0.2.255"
+}
+
+# Allow traffic from the App VM's outbound public IP.
+resource "azurerm_postgresql_flexible_server_firewall_rule" "app_vm_outbound" {
+  name             = "AllowAppVmOutbound"
+  server_id        = azurerm_postgresql_flexible_server.db.id
+  start_ip_address = "158.158.106.255"
+  end_ip_address   = "158.158.106.255"
 }
 
 # Preserve existing network resources when moving them

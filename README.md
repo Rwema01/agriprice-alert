@@ -4,7 +4,8 @@ Real-time crop price tracking for smallholder farmers.
 
 
 ## Live Application
-[Access Live App](http://68.221.202.79:5000)
+
+[Access Live App](http://158.158.105.80)
 
 ## Architecture Overview
 
